@@ -1,37 +1,36 @@
-import gradio as gr
-import gspread
+from IPython import get_ipython
+from IPython.display import display
 import os
 import json
-from google.oauth2.service_account import Credentials
+import gradio as gr
+import psycopg2
 import re
 
-# Definindo os escopos necessários para acessar o Google Sheets
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+# Conectar ao banco de dados usando a URL fornecida pelo Heroku
+DATABASE_URL = os.getenv('DATABASE_URL')
+conn = psycopg2.connect(DATABASE_URL, sslmode='require')
 
-# Configuração de credenciais para o Google Sheets com escopos apropriados
-service_account_info = json.loads(os.getenv("GOOGLE_CREDENTIALS"))
-creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
-gc = gspread.authorize(creds)
+# Função para criar a tabela caso ainda não exista
+def criar_tabela():
+    with conn.cursor() as cur:
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS dados_lipedema (
+                id SERIAL PRIMARY KEY,
+                nome_completo VARCHAR(255),
+                email VARCHAR(255),
+                idade INTEGER,
+                peso FLOAT,
+                profissao VARCHAR(255),
+                whatsapp VARCHAR(20),
+                pontuacao INTEGER,
+                resultado VARCHAR(255)
+            )
+        ''')
+        conn.commit()
 
-# Nome da planilha
-sheet_name = "Dados_Lipedema"
-
-# Função para obter ou criar a planilha
-def get_or_create_sheet(sheet_name):
-    try:
-        sheet = gc.open(sheet_name)
-        worksheet = sheet.sheet1
-    except gspread.exceptions.SpreadsheetNotFound:
-        sheet = gc.create(sheet_name)
-        sheet.share("nutricionistasilviamartins@gmail.com", perm_type="user", role="writer")  # Substitua pelo seu email
-        worksheet = sheet.sheet1
-        # Cabeçalhos da planilha
-        worksheet.append_row(["Nome Completo", "Email", "Idade", "Peso", "Profissão", "Whatsapp", "Pontuação", "Resultado"])
-    return worksheet
-
-# Obter ou criar a planilha
-worksheet = get_or_create_sheet(sheet_name)
-
+# Criar a tabela ao iniciar o sistema
+criar_tabela()
+        
 # Perguntas e respostas com pontuações
 questions = [
     ("Você sente que tem algo errado nas suas pernas, mas não sabe o que?",
@@ -56,26 +55,43 @@ questions = [
 
 # Função para validar e-mail
 def validar_email(email):
+    # Expressão regular para e-mails válidos
     email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
     return re.match(email_regex, email) is not None
 
 # Função para validar telefone com DDD
 def validar_telefone(telefone):
+    # Expressão regular para telefone com 11 dígitos (somente números)
     telefone_regex = r'^\d{11}$'
     return re.match(telefone_regex, telefone) is not None
 
 # Função para processar o formulário e gerar o resultado
 def processar_formulario(nome, email, idade, peso, profissao, whatsapp, *respostas):
+    # Verificação de campos vazios
     if not nome or not email or not idade or not peso or not profissao or not whatsapp:
         return "Por favor, preencha todas as informações pessoais."
+
+    # Validação do e-mail
     if not validar_email(email):
         return "Por favor, insira um e-mail válido."
+
+    # Validação do telefone (Whatsapp) com DDD
     if not validar_telefone(whatsapp):
         return "Por favor, insira um número de telefone válido com 11 dígitos (apenas números)."
 
-    pontuacao = sum([questions[i][2][questions[i][1].index(resposta)] for i, resposta in enumerate(respostas)])
+    for resposta in respostas:
+        if resposta is None:
+            return "Por favor, responda todas as perguntas do questionário."
 
-     # Definindo o resultado final com base na pontuação
+    # Cálculo da pontuação
+    pontuacao = 0
+    for i, resposta in enumerate(respostas):
+        # Encontra o índice da opção selecionada
+        option_index = questions[i][1].index(resposta)
+        # Recupera a pontuação usando o option_index
+        pontuacao += questions[i][2][option_index]
+
+    # Definindo o resultado final com base na pontuação
     if pontuacao >= 13:
         resultado = "75-100% de chance de ter lipedema"
         orientacao = "Você tem uma alta chance de ter lipedema. É importante procurar um especialista para uma avaliação completa e tratamentos adequados."
@@ -89,20 +105,54 @@ def processar_formulario(nome, email, idade, peso, profissao, whatsapp, *respost
         resultado = "0-25% de chance de ter lipedema"
         orientacao = "A chance de você ter lipedema é muito baixa, mas se você tiver algum sintoma persistente, procure um especialista para mais informações."
 
+    # Incentivo para agendamento de consulta
+    agendamento = "\n\nPara um diagnóstico completo e personalizado, AGENDE UMA CONSULTA INICIAL GRATUITA DE 30 MINUTOS com a especialista certificada da Abrali Silvia Martins. Clique no Botão do Whatsapp para agendar."
+
+    # Resultado final com orientações e incentivo para agendamento
+    resultado_final = f"Sua pontuação: {pontuacao}\nResultado: {resultado}\n\n{orientacao}{agendamento}"
+
+    # Salvando os dados no banco de dados PostgreSQL
     try:
-        worksheet.append_row([nome, email, idade, peso, profissao, whatsapp, pontuacao, resultado])
+        
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO dados_lipedema (nome, email, idade, peso, profissao, whatsapp, pontuacao, resultado)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
+        ''', (nome, email, idade, peso, profissao, whatsapp, pontuacao, resultado))
+        conn.commit()
+        cursor.close()
+        conn.close()
     except Exception as e:
-        return f"Erro ao salvar na planilha: {e}"
+        return f"Erro ao salvar no banco de dados: {e}"
 
-    return f"Sua pontuação: {pontuacao}\nResultado: {resultado}"
+    # Retorna o resultado final
+    return resultado_final
 
-inputs = [gr.Textbox(label="Nome Completo"), gr.Textbox(label="Email"), gr.Slider(minimum=0, maximum=120, step=1, label="Idade"), gr.Number(label="Peso (kg)"), gr.Textbox(label="Profissão"), gr.Textbox(label="Whatsapp - Coloque o DDD e o Número Corretamente")]
+# Modifique os campos de idade e peso para aceitar apenas números
+inputs = [
+    gr.Textbox(label="Nome Completo"),
+    gr.Textbox(label="Email"),
+    gr.Slider(minimum=0, maximum=120, step=1, label="Idade", elem_id="idade_slider"),
+    gr.Number(label="Peso (kg)", precision=1),
+    gr.Textbox(label="Profissão"),
+    gr.Textbox(label="Whatsapp - Coloque o DDD e o Número Corretamente"),
+]
 
 for question, options, _ in questions:
     inputs.append(gr.Radio(label=question, choices=options))
 
 output = gr.Textbox(label="Resultado Final")
 
-interface = gr.Interface(fn=processar_formulario, inputs=inputs, outputs=output, title="Faça o Seu Teste e Descubra se Você Apresenta Sinais de LIPEDEMA", description="Responda algumas perguntas rápidas e veja sua chance de ter lipedema. Esta ferramenta foi criada para auxiliá-la na identificação de sintomas, mas não substitui um diagnóstico profissional. Para uma avaliação completa e precisa, consulte um especialista.", allow_flagging="never", theme="huggingface")
+# Executando o Gradio com melhorias de layout
+interface = gr.Interface(
+    fn=processar_formulario,
+    inputs=inputs,
+    outputs=output,
+    title="Faça o Seu Teste e Descubra se Você Apresenta Sinais de LIPEDEMA",
+    description="Responda algumas perguntas rápidas e veja sua chance de ter lipedema. Esta ferramenta foi criada para auxiliá-la na identificação de sintomas, mas não substitui um diagnóstico profissional. Para uma avaliação completa e precisa, consulte um especialista.",
+    allow_flagging="never",
+    theme="huggingface"
+)
 
+# Gera o link compartilhável
 interface.launch(share=True)
