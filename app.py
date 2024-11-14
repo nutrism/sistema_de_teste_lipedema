@@ -10,8 +10,11 @@ def criar_conexao():
     DATABASE_URL = os.getenv('DATABASE_URL')
     url = urlparse(DATABASE_URL)
     
-    # Se a porta não estiver presente ou for inválida, use a porta padrão 5432
-    port = url.port if url.port else 5432
+    # Tenta obter a porta da URL. Se não for válida, usa 5432 por padrão.
+    try:
+        port = int(url.port) if url.port else 5432
+    except ValueError:
+        port = 5432  # Se houver erro de conversão, usa a porta padrão 5432
     
     conn = psycopg2.connect(
         database=url.path[1:],  # Pega o nome do banco de dados após "/"
