@@ -3,6 +3,25 @@ import json
 import gradio as gr
 import psycopg2
 import re
+from urllib.parse import urlparse
+
+# Função para criar a conexão com o banco de dados usando a URL fornecida pelo Heroku
+def criar_conexao():
+    # Obtendo a variável de ambiente DATABASE_URL
+    DATABASE_URL = os.getenv('DATABASE_URL')
+
+    # Fazendo o parsing da URL para obter as informações de conexão
+    url = urlparse(DATABASE_URL)
+
+    # Conectando ao banco de dados usando as informações da URL
+    conn = psycopg2.connect(
+        database=url.path[1:],  # A parte após o "/"
+        user=url.username,       # O nome de usuário
+        password=url.password,   # A senha
+        host=url.hostname,       # O host
+        port=url.port            # A porta
+    )
+    return conn
 
 # Conectar ao banco de dados usando a URL fornecida pelo Heroku
 DATABASE_URL = os.getenv('DATABASE_URL')
