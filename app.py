@@ -9,15 +9,19 @@ from urllib.parse import urlparse
 def criar_conexao():
     DATABASE_URL = os.getenv('DATABASE_URL')
     url = urlparse(DATABASE_URL)
-   
-    conn = psycopg2.connect(
-        database=url.path[1:],
-        user=url.username,
-        password=url.password,
-        host=url.hostname,
-        port=url.port
-    )
     
+    # Se a porta não estiver presente ou for inválida, use a porta padrão 5432
+    port = url.port if url.port else 5432
+    
+    conn = psycopg2.connect(
+        database=url.path[1:],  # Pega o nome do banco de dados após "/"
+        user=url.username,       # Usuário do banco de dados
+        password=url.password,   # Senha do banco de dados
+        host=url.hostname,       # Host do banco de dados
+        port=port                # Porta do banco de dados (usando a porta padrão 5432 se não especificada)
+    )
+    return conn
+
 # Conectar ao banco de dados usando a URL fornecida pelo Heroku
 conn = criar_conexao()
 
@@ -28,7 +32,13 @@ def criar_tabela(conn):
             CREATE TABLE IF NOT EXISTS dados_lipedema (
                 id SERIAL PRIMARY KEY,
                 nome_completo VARCHAR(255),
-                # ... outros campos
+                email VARCHAR(255),
+                idade INTEGER,
+                peso FLOAT,
+                profissao VARCHAR(255),
+                whatsapp VARCHAR(20),
+                pontuacao INTEGER,
+                resultado VARCHAR(255)
             )
         ''')
         conn.commit()
