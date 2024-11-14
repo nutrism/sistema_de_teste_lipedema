@@ -5,6 +5,7 @@ import psycopg2
 import re
 from urllib.parse import urlparse
 
+# Função para criar a conexão com o banco de dados usando a URL fornecida pelo Heroku
 def criar_conexao():
     DATABASE_URL = os.getenv('HEROKU_POSTGRESQL_RED_URL')  # Usando a variável de ambiente correta
     url = urlparse(DATABASE_URL)
@@ -24,13 +25,10 @@ def criar_conexao():
     )
     return conn
 
-# Conectar ao banco de dados usando a URL fornecida pelo Heroku
-conn = criar_conexao()
-
 # Função para criar a tabela caso ainda não exista
 def criar_tabela(conn):
     with conn.cursor() as cur:
-        cur.execute('''
+        cur.execute(''' 
             CREATE TABLE IF NOT EXISTS dados_lipedema (
                 id SERIAL PRIMARY KEY,
                 nome_completo VARCHAR(255),
@@ -45,13 +43,77 @@ def criar_tabela(conn):
         ''')
         conn.commit()
 
-# Criar a tabela
-criar_tabela(conn)
+# Função para processar o formulário e gerar o resultado
+def processar_formulario(nome, email, idade, peso, profissao, whatsapp, *respostas):
+    # Criar a conexão com o banco de dados
+    conn = criar_conexao()
 
-# Fechar a conexão
-conn.close()
-        
-# Perguntas e respostas com pontuações
+    # Validar campos obrigatórios
+    if not nome or not email or not idade or not peso or not profissao or not whatsapp:
+        conn.close()
+        return "Por favor, preencha todas as informações pessoais."
+
+    # Validar e-mail
+    if not validar_email(email):
+        conn.close()
+        return "Por favor, insira um e-mail válido."
+
+    # Validar telefone
+    if not validar_telefone(whatsapp):
+        conn.close()
+        return "Por favor, insira um número de telefone válido com 11 dígitos (apenas números)."
+
+    # Calcular pontuação
+    pontuacao = 0
+    for i, resposta in enumerate(respostas):
+        option_index = questions[i][1].index(resposta)
+        pontuacao += questions[i][2][option_index]
+
+    # Definir o resultado com base na pontuação
+    if pontuacao >= 13:
+        resultado = "75-100% de chance de ter lipedema"
+        orientacao = "Alta chance de lipedema. Procure um especialista."
+    elif pontuacao >= 9:
+        resultado = "50-75% de chance de ter lipedema"
+        orientacao = "Moderada chance de lipedema. Considere avaliação médica."
+    elif pontuacao >= 5:
+        resultado = "25-50% de chance de ter lipedema"
+        orientacao = "Baixa chance, mas consulte um profissional se houver sintomas."
+    else:
+        resultado = "0-25% de chance de ter lipedema"
+        orientacao = "Muito baixa chance, mas procure orientação se houver sintomas."
+
+    resultado_final = f"Sua pontuação: {pontuacao}\nResultado: {resultado}\n\n{orientacao}"
+
+    # Inserir dados no banco de dados
+    try:
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO dados_lipedema (nome_completo, email, idade, peso, profissao, whatsapp, pontuacao, resultado)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
+        ''', (nome, email, idade, peso, profissao, whatsapp, pontuacao, resultado))
+        conn.commit()
+        cursor.close()
+    except Exception as e:
+        conn.close()
+        return f"Erro ao salvar no banco de dados: {e}"
+
+    # Fechar a conexão
+    conn.close()
+
+    return resultado_final
+
+# Função para validar e-mail
+def validar_email(email):
+    email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(email_regex, email) is not None
+
+# Função para validar telefone com DDD
+def validar_telefone(telefone):
+    telefone_regex = r'^\d{11}$'
+    return re.match(telefone_regex, telefone) is not None
+
+    # Perguntas e respostas com pontuações
 questions = [
     ("Você sente que tem algo errado nas suas pernas, mas não sabe o que?",
      ["Sim, pernas grandes, parecem troncos, gordura no tornozelo.", "Sim, pernas maiores comparadas ao corpo.", "Sim, pernas grandes e proporcionais.", "Não, minhas pernas estão bem."], [3, 2, 1, 0]),
@@ -72,60 +134,6 @@ questions = [
     ("Suas pernas ou braços formam hematomas facilmente?",
      ["Sim, formam hematomas muito facilmente, nem percebo como.", "Sim, formam hematomas com contato mínimo.", "Não formam hematomas facilmente."], [2, 1, 0]),
 ]
-
-# Função para validar e-mail
-def validar_email(email):
-    email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return re.match(email_regex, email) is not None
-
-# Função para validar telefone com DDD
-def validar_telefone(telefone):
-    telefone_regex = r'^\d{11}$'
-    return re.match(telefone_regex, telefone) is not None
-
-# Função para processar o formulário e gerar o resultado
-def processar_formulario(nome, email, idade, peso, profissao, whatsapp, *respostas):
-    if not nome or not email or not idade or not peso or not profissao or not whatsapp:
-        return "Por favor, preencha todas as informações pessoais."
-
-    if not validar_email(email):
-        return "Por favor, insira um e-mail válido."
-
-    if not validar_telefone(whatsapp):
-        return "Por favor, insira um número de telefone válido com 11 dígitos (apenas números)."
-
-    pontuacao = 0
-    for i, resposta in enumerate(respostas):
-        option_index = questions[i][1].index(resposta)
-        pontuacao += questions[i][2][option_index]
-
-    if pontuacao >= 13:
-        resultado = "75-100% de chance de ter lipedema"
-        orientacao = "Alta chance de lipedema. Procure um especialista."
-    elif pontuacao >= 9:
-        resultado = "50-75% de chance de ter lipedema"
-        orientacao = "Moderada chance de lipedema. Considere avaliação médica."
-    elif pontuacao >= 5:
-        resultado = "25-50% de chance de ter lipedema"
-        orientacao = "Baixa chance, mas consulte um profissional se houver sintomas."
-    else:
-        resultado = "0-25% de chance de ter lipedema"
-        orientacao = "Muito baixa chance, mas procure orientação se houver sintomas."
-
-    resultado_final = f"Sua pontuação: {pontuacao}\nResultado: {resultado}\n\n{orientacao}"
-
-    try:
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO dados_lipedema (nome_completo, email, idade, peso, profissao, whatsapp, pontuacao, resultado)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
-        ''', (nome, email, idade, peso, profissao, whatsapp, pontuacao, resultado))
-        conn.commit()
-        cursor.close()
-    except Exception as e:
-        return f"Erro ao salvar no banco de dados: {e}"
-
-    return resultado_final
 
 # Configuração do Gradio
 inputs = [
@@ -154,6 +162,3 @@ interface = gr.Interface(
 
 if __name__ == "__main__":
     interface.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 8080)))
-
-
-
