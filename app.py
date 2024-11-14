@@ -72,18 +72,20 @@ def processar_formulario(nome, email, idade, peso, profissao, whatsapp, *respost
     # Definir o resultado com base na pontuação
     if pontuacao >= 13:
         resultado = "75-100% de chance de ter lipedema"
-        orientacao = "Alta chance de lipedema. Procure um especialista."
+        orientacao = "Os sintomas indicam uma alta probabilidade de lipedema, sugerindo a necessidade de atenção especializada para uma melhor compreensão e tratamento da condição."
     elif pontuacao >= 9:
         resultado = "50-75% de chance de ter lipedema"
-        orientacao = "Moderada chance de lipedema. Considere avaliação médica."
+        orientacao = "Os sinais apontam para uma chance moderada de lipedema, o que pode justificar uma análise cuidadosa dos sintomas para confirmação e possíveis orientações."
     elif pontuacao >= 5:
         resultado = "25-50% de chance de ter lipedema"
-        orientacao = "Baixa chance, mas consulte um profissional se houver sintomas."
+        orientacao = "Há uma baixa chance de lipedema, mas, se os sintomas são persistentes, pode ser interessante investigar mais a fundo para esclarecer qualquer dúvida."
     else:
         resultado = "0-25% de chance de ter lipedema"
-        orientacao = "Muito baixa chance, mas procure orientação se houver sintomas."
+        orientacao = "A possibilidade de lipedema é muito baixa. Entretanto, sintomas persistentes ou incômodos podem exigir uma análise mais detalhada para trazer maior clareza."
 
     resultado_final = f"Sua pontuação: {pontuacao}\nResultado: {resultado}\n\n{orientacao}"
+    
+    agendamento = "\n\nEntender mais sobre o que você sente e como isso afeta seu dia a dia é essencial para viver com qualidade. Pensando nisso, oferecemos uma consulta inicial gratuita de 30 minutos com a Nutricionista Especialista em lipedema Silvia Martins. Esse momento é dedicado a ouvir você, compreender suas dores e traçar, de forma personalizada, as melhores abordagens para o seu bem-estar. Não se trata apenas de um diagnóstico, mas de um cuidado focado em você."
 
     # Inserir dados no banco de dados
     try:
