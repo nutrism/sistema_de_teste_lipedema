@@ -7,37 +7,23 @@ from urllib.parse import urlparse
 
 # Função para criar a conexão com o banco de dados usando a URL fornecida pelo Heroku
 def criar_conexao():
-    # Obtendo a variável de ambiente DATABASE_URL
     DATABASE_URL = os.getenv('DATABASE_URL')
-
-    # Fazendo o parsing da URL para obter as informações de conexão
     url = urlparse(DATABASE_URL)
 
-    # Conectando ao banco de dados usando as informações da URL
     conn = psycopg2.connect(
-        database=url.path[1:],  # A parte após o "/"
-        user=url.username,       # O nome de usuário
-        password=url.password,   # A senha
-        host=url.hostname,       # O host
-        port=url.port            # A porta
+        database=url.path[1:],
+        user=url.username,
+        password=url.password,   
+
+        host=url.hostname,
+        port=url.port
     )
-    return conn
+    return conn   
 
 # Conectar ao banco de dados usando a URL fornecida pelo Heroku
-DATABASE_URL = os.getenv('DATABASE_URL')
-conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+conn = criar_conexao()
 
 # Função para criar a tabela caso ainda não exista
-def criar_conexao():
-    conn = psycopg2.connect(
-        database="meu_banco_de_dados",
-        user="meu_usuario",
-        password="minha_senha",
-        host="meu_host",
-        port="5432"
-    )
-    return conn
-
 def criar_tabela(conn):
     with conn.cursor() as cur:
         cur.execute('''
@@ -48,9 +34,6 @@ def criar_tabela(conn):
             )
         ''')
         conn.commit()
-
-# Criar a conexão
-conn = criar_conexao()
 
 # Criar a tabela
 criar_tabela(conn)
