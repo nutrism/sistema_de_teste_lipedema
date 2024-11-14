@@ -5,9 +5,8 @@ import psycopg2
 import re
 from urllib.parse import urlparse
 
-# Função para criar a conexão com o banco de dados usando a URL fornecida pelo Heroku
 def criar_conexao():
-    DATABASE_URL = os.getenv('DATABASE_URL')
+    DATABASE_URL = os.getenv('HEROKU_POSTGRESQL_RED_URL')  # Usando a variável de ambiente correta
     url = urlparse(DATABASE_URL)
     
     # Tenta obter a porta da URL. Se não for válida, usa 5432 por padrão.
