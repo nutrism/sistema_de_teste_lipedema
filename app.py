@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 def criar_conexao():
     DATABASE_URL = os.getenv('DATABASE_URL')
     url = urlparse(DATABASE_URL)
-
+   
     conn = psycopg2.connect(
         database=url.path[1:],
         user=url.username,
@@ -17,8 +17,7 @@ def criar_conexao():
         host=url.hostname,
         port=url.port
     )
-    return conn   
-
+    
 # Conectar ao banco de dados usando a URL fornecida pelo Heroku
 conn = criar_conexao()
 
