@@ -85,8 +85,11 @@ def processar_formulario(nome, email, idade, peso, profissao, whatsapp, *respost
 
     resultado_final = f"Sua pontuação: {pontuacao}\nResultado: {resultado}\n\n{orientacao}"
     
-    agendamento = "\n\nEntender mais sobre o que você sente e como isso afeta seu dia a dia é essencial para viver com qualidade. Pensando nisso, oferecemos uma consulta inicial gratuita de 30 minutos com a Nutricionista Especialista em lipedema Silvia Martins. Esse momento é dedicado a ouvir você, compreender suas dores e traçar, de forma personalizada, as melhores abordagens para o seu bem-estar. Não se trata apenas de um diagnóstico, mas de um cuidado focado em você."
+    agendamento = "\n\nCONSIDERAÇÕES FINAIS: Entender mais sobre o que você sente e como isso afeta seu dia a dia é essencial para viver com qualidade. Pensando nisso, oferecemos uma consulta inicial gratuita de 30 minutos com a Nutricionista Especialista em lipedema Silvia Martins. Esse momento é dedicado a ouvir você, compreender suas dores e traçar, de forma personalizada, as melhores abordagens para o seu bem-estar. Não se trata apenas de um diagnóstico, mas de um cuidado focado em você."
 
+    # Concatenar agendamento ao resultado final
+    resultado_final += agendamento
+    
     # Inserir dados no banco de dados
     try:
         cursor = conn.cursor()
