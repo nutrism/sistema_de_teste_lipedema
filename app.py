@@ -9,25 +9,35 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 conn = psycopg2.connect(DATABASE_URL, sslmode='require')
 
 # Função para criar a tabela caso ainda não exista
-def criar_tabela():
+def criar_conexao():
+    conn = psycopg2.connect(
+        database="meu_banco_de_dados",
+        user="meu_usuario",
+        password="minha_senha",
+        host="meu_host",
+        port="5432"
+    )
+    return conn
+
+def criar_tabela(conn):
     with conn.cursor() as cur:
         cur.execute('''
             CREATE TABLE IF NOT EXISTS dados_lipedema (
                 id SERIAL PRIMARY KEY,
                 nome_completo VARCHAR(255),
-                email VARCHAR(255),
-                idade INTEGER,
-                peso FLOAT,
-                profissao VARCHAR(255),
-                whatsapp VARCHAR(20),
-                pontuacao INTEGER,
-                resultado VARCHAR(255)
+                # ... outros campos
             )
         ''')
         conn.commit()
 
-# Criar a tabela ao iniciar o sistema
-criar_tabela()
+# Criar a conexão
+conn = criar_conexao()
+
+# Criar a tabela
+criar_tabela(conn)
+
+# Fechar a conexão
+conn.close()
         
 # Perguntas e respostas com pontuações
 questions = [
