@@ -155,8 +155,7 @@ interface = gr.Interface(
     description="Esta ferramenta auxilia na identificação de sintomas de lipedema, mas não substitui diagnóstico profissional.",
     theme="compact",
     allow_flagging="never",
-    live=False,
-    layout="vertical"
+    live=False
 )
 
 if __name__ == "__main__":
