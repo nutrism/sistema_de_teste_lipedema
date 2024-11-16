@@ -5,43 +5,66 @@ import psycopg2
 import re
 from urllib.parse import urlparse
 
-# Função para criar a conexão com o banco de dados usando a URL fornecida pelo Heroku
+import os
+import psycopg2
+from urllib.parse import urlparse
+
 def criar_conexao():
-    DATABASE_URL = os.getenv('HEROKU_POSTGRESQL_RED_URL')  # Usando a variável de ambiente correta
+    DATABASE_URL = os.getenv('HEROKU_POSTGRESQL_RED_URL')
     url = urlparse(DATABASE_URL)
-    
-    # Tenta obter a porta da URL. Se não for válida, usa 5432 por padrão.
     try:
         port = int(url.port) if url.port else 5432
     except ValueError:
-        port = 5432  # Se houver erro de conversão, usa a porta padrão 5432
-    
+        port = 5432
+
     conn = psycopg2.connect(
-        database=url.path[1:],  # Pega o nome do banco de dados após "/"
-        user=url.username,       # Usuário do banco de dados
-        password=url.password,   # Senha do banco de dados
-        host=url.hostname,       # Host do banco de dados
-        port=port                # Porta do banco de dados (usando a porta padrão 5432 se não especificada)
+        database=url.path[1:],
+        user=url.username,
+        password=url.password,
+        host=url.hostname,
+        port=port
     )
     return conn
 
-# Função para criar a tabela caso ainda não exista
 def criar_tabela(conn):
+    try:
+        with conn.cursor() as cur:
+            cur.execute(''' 
+                CREATE TABLE IF NOT EXISTS dados_lipedema (
+                    id SERIAL PRIMARY KEY,
+                    nome_completo VARCHAR(255),
+                    email VARCHAR(255),
+                    idade INTEGER,
+                    peso FLOAT,
+                    profissao VARCHAR(255),
+                    whatsapp VARCHAR(20),
+                    pontuacao INTEGER,
+                    resultado VARCHAR(255)
+                )
+            ''')
+            conn.commit()
+            print("Tabela criada ou já existente.")
+    except Exception as e:
+        print(f"Erro ao criar a tabela: {e}")
+
+def verificar_tabelas(conn):
     with conn.cursor() as cur:
-        cur.execute(''' 
-            CREATE TABLE IF NOT EXISTS dados_teste_lipedema (
-                id SERIAL PRIMARY KEY,
-                nome_completo VARCHAR(255),
-                email VARCHAR(255),
-                idade INTEGER,
-                peso FLOAT,
-                profissao VARCHAR(255),
-                whatsapp VARCHAR(20),
-                pontuacao INTEGER,
-                resultado VARCHAR(255)
-            )
-        ''')
-        conn.commit()
+        cur.execute("""
+            SELECT table_name FROM information_schema.tables
+            WHERE table_schema = 'public';
+        """)
+        tabelas = cur.fetchall()
+        print("Tabelas existentes:", tabelas)
+
+if __name__ == '__main__':
+    try:
+        conn = criar_conexao()
+        print("Conexão estabelecida com sucesso!")
+        verificar_tabelas(conn)
+        criar_tabela(conn)
+        conn.close()
+    except Exception as e:
+        print(f"Erro geral: {e}")
 
 # Função para processar o formulário e gerar o resultado
 def processar_formulario(nome, email, idade, peso, profissao, whatsapp, *respostas):
@@ -84,7 +107,7 @@ def processar_formulario(nome, email, idade, peso, profissao, whatsapp, *respost
     try:
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO dados_teste_lipedema (nome_completo, email, idade, peso, profissao, whatsapp, pontuacao, resultado)
+            INSERT INTO dados_lipedema (nome_completo, email, idade, peso, profissao, whatsapp, pontuacao, resultado)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
         ''', (nome, email, idade, peso, profissao, whatsapp, pontuacao, resultado))
         conn.commit()
