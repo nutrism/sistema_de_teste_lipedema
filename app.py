@@ -153,11 +153,10 @@ interface = gr.Interface(
     outputs=output,
     title="Faça o Seu Teste e Descubra se Você Apresenta Sinais de LIPEDEMA",
     description="Esta ferramenta auxilia na identificação de sintomas de lipedema, mas não substitui diagnóstico profissional.",
-    theme="compact",  # Design otimizado para exibição compacta
+    theme="compact",
     allow_flagging="never",
     live=False,
-    submit_button="Enviar",
-    layout="vertical"  # Layout vertical para maior clareza
+    layout="vertical"
 )
 
 if __name__ == "__main__":
