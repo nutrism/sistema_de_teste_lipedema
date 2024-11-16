@@ -29,7 +29,7 @@ def criar_conexao():
 def criar_tabela(conn):
     with conn.cursor() as cur:
         cur.execute(''' 
-            CREATE TABLE IF NOT EXISTS dados_lipedema (
+            CREATE TABLE IF NOT EXISTS dados_teste_lipedema (
                 id SERIAL PRIMARY KEY,
                 nome_completo VARCHAR(255),
                 email VARCHAR(255),
@@ -84,7 +84,7 @@ def processar_formulario(nome, email, idade, peso, profissao, whatsapp, *respost
     try:
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO dados_lipedema (nome_completo, email, idade, peso, profissao, whatsapp, pontuacao, resultado)
+            INSERT INTO dados_teste_lipedema (nome_completo, email, idade, peso, profissao, whatsapp, pontuacao, resultado)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s);
         ''', (nome, email, idade, peso, profissao, whatsapp, pontuacao, resultado))
         conn.commit()
