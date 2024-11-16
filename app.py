@@ -45,15 +45,13 @@ def criar_tabela(conn):
 
 # Função para processar o formulário e gerar o resultado
 def processar_formulario(nome, email, idade, peso, profissao, whatsapp, *respostas):
-    # Validações para evitar problemas com campos em branco
-    if not nome or not email or not idade or not peso or not profissao or not whatsapp:
-        return "Por favor, preencha todos os campos obrigatórios."
+    # Criar a conexão com o banco de dados
+    conn = criar_conexao()
 
-    # Validar campos numéricos
-    if idade <= 0:
-        return "A idade deve ser maior que zero."
-    if peso <= 0:
-        return "O peso deve ser maior que zero."
+    # Validar campos obrigatórios
+    if not nome or not email or not idade or not peso or not profissao or not whatsapp:
+        conn.close()
+        return "Por favor, preencha todas as informações pessoais."
 
     # Calcular pontuação
     pontuacao = 0
@@ -122,40 +120,29 @@ questions = [
      ["Sim, formam hematomas muito facilmente, nem percebo como.", "Sim, formam hematomas com contato mínimo.", "Não, nunca formo hematomas."], [2, 1, 0]),
 ]
 
-# Configuração do formulário com layout otimizado
+# Configuração do Gradio
 inputs = [
-    gr.Textbox(label="Nome Completo", placeholder="Digite seu nome"),
-    gr.Textbox(label="Email", placeholder="Digite seu email"),
-    gr.Slider(minimum=0, maximum=120, step=1, label="Idade"),
+    gr.Textbox(label="Nome Completo"),
+    gr.Textbox(label="Email"),
+    gr.Slider(minimum=0, maximum=120, step=1, label="Idade", elem_id="idade_slider"),
     gr.Number(label="Peso (kg)", precision=1),
-    gr.Textbox(label="Profissão", placeholder="Digite sua profissão"),
-    gr.Textbox(label="WhatsApp (com DDD)", placeholder="Ex: (21) 99999-9999"),
+    gr.Textbox(label="Profissão"),
+    gr.Textbox(label="Whatsapp - Coloque o DDD e o Número Corretamente"),
 ]
 
-# Adicionar perguntas de forma visualmente limpa
 for question, options, _ in questions:
-    inputs.append(
-        gr.Radio(
-            label=question, 
-            choices=options, 
-            show_label=True, 
-            interactive=True
-        )
-    )
+    inputs.append(gr.Radio(label=question, choices=options))
 
-# Configuração do output com estilo simples
 output = gr.Textbox(label="Resultado Final")
 
-# Configuração da interface
 interface = gr.Interface(
     fn=processar_formulario,
     inputs=inputs,
     outputs=output,
     title="Faça o Seu Teste e Descubra se Você Apresenta Sinais de LIPEDEMA",
     description="Esta ferramenta auxilia na identificação de sintomas de lipedema, mas não substitui diagnóstico profissional.",
-    theme="compact",
     allow_flagging="never",
-    live=False
+    theme="huggingface"
 )
 
 if __name__ == "__main__":
