@@ -100,23 +100,23 @@ def processar_formulario(nome, email, idade, peso, profissao, whatsapp, *respost
 
     # Perguntas e respostas com pontuações
 questions = [
-    ("Você sente que tem algo errado nas suas pernas, mas não sabe o que?",
+    ("PERGUNTA 01..: Você sente que tem algo errado nas suas pernas, mas não sabe o que?",
      ["Sim, pernas grandes, parecem troncos, gordura no tornozelo.", "Sim, pernas maiores comparadas ao corpo.", "Sim, pernas grandes e proporcionais.", "Não, minhas pernas estão bem."], [3, 2, 1, 0]),
-    ("Você percebe que a parte inferior do seu corpo (pernas, quadris) parece maior ou desproporcional ao tronco?",
+    ("PERGUNTA 02..: Você percebe que a parte inferior do seu corpo (pernas, quadris) parece maior ou desproporcional ao tronco?",
      ["Sim, tamanho da calça é 3x maior que camisa.", "Sim, calça 1 a 2x maior que camisa.", "Não, tronco maior que a parte de baixo.", "Não, ambos proporcionais."], [2, 1, 0, 0]),
-    ("Você tem problema para perder peso, principalmente na parte de baixo do corpo?",
+    ("PERGUNTA 03..: Você tem problema para perder peso, principalmente na parte de baixo do corpo?",
      ["Sim, não consigo perder peso, principalmente nas coxas/pernas/quadril/braços.", "Sim, perco peso no tronco, excluindo braços.", "Não, perco peso proporcionalmente.", "Não tenho problema de peso ou dificuldade para perder."], [2, 1, 0, 0]),
-    ("Você nota que suas pernas ou braços têm áreas onde a pele parece mais sensível ou dolorosa ao toque, comparada a outras partes do corpo?",
+    ("PERGUNTA 04..: Você nota que suas pernas ou braços têm áreas onde a pele parece mais sensível ou dolorosa ao toque, comparada a outras partes do corpo?",
      ["Sim, áreas específicas são muito sensíveis e dolorosas ao toque.", "Sim, percebo sensibilidade em algumas áreas, mas sem dor intensa.", "Não, a sensibilidade é igual ao restante do corpo.", "Não, nunca percebi diferença na sensibilidade."], [2, 1, 0, 0]),
-    ("Você sente que há um acúmulo de gordura ou volume em suas pernas ou braços que se destaca mesmo com um peso corporal considerado normal?",
+    ("PERGUNTA 05..: Você sente que há um acúmulo de gordura ou volume em suas pernas ou braços que se destaca mesmo com um peso corporal considerado normal?",
      ["Sim, há um acúmulo evidente, mesmo quando estou no peso ideal.", "Sim, há algum acúmulo visível, mas não muito acentuado.", "Não, o volume parece proporcional ao peso.", "Não, nunca notei diferenças relacionadas ao peso."], [2, 1, 0, 0]),
-    ("Você percebe que suas pernas ou braços parecem mais “pesados” ou desconfortáveis ao final do dia?",
+    ("PERGUNTA 06..: Você percebe que suas pernas ou braços parecem mais “pesados” ou desconfortáveis ao final do dia?",
      ["Sim, sinto peso e desconforto constantes ao final do dia.", "Sim, às vezes noto peso e desconforto, mas em dias mais longos ou quentes.", "Não, raramente percebo peso ou desconforto.", "Não, nunca sinto peso ou desconforto nessas áreas"], [2, 1, 0, 0]),
-    ("Suas pernas doem?",
+    ("PERGUNTA 07..: Suas pernas doem?",
      ["Sim, são muito sensíveis, dolorosas ou com sensação de queimação.", "Sim, dolorosas com qualquer toque.", "Às vezes, doem ao pressionar ou ficar muito tempo em pé.", "Não, não doem."], [3, 2, 1, 0]),
-    ("Você tem inchaço nas pernas?",
+    ("PERGUNTA 08..: Você tem inchaço nas pernas?",
      ["Sim, incham quase o tempo todo, pioram no calor, e não melhora com elevação.", "Sim , frequentemente incham, mas melhora com elevação.", "Não, às vezes incham no calor ou após longas viagens.", "Não, raramente sinto inchaço nas pernas."], [2, 1, 0, 0]),
-    ("Suas pernas ou braços formam hematomas facilmente?",
+    ("PERGUNTA 09..: Suas pernas ou braços formam hematomas facilmente?",
      ["Sim, formam hematomas muito facilmente, nem percebo como.", "Sim, formam hematomas com contato mínimo.", "Não, nunca formo hematomas."], [2, 1, 0]),
 ]
 
